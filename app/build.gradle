@@ -1,0 +1,190 @@
+apply plugin: 'com.android.application'
+def ext = rootProject.ext
+def debug_mode = rootProject.ext.debug_mode
+android {
+    compileSdkVersion compile_sdk_version
+    buildToolsVersion ext.build_version
+    defaultConfig {
+        applicationId ext.application_id
+        minSdkVersion ext.min_sdk_version
+        targetSdkVersion ext.target_sdk_version
+        versionCode ext.version_code
+        versionName ext.version_name
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders = [JPUSH_APPKEY_VALUE: "f80337269bfdfae190826403",
+                                PACKAGE_NAME      : "com.sly.baseframe",
+                                CHANNEL_ID      : "f80337269bfdfae190826403",
+                                UMENG_CHANNEL_VALUE      : "unknown",
+
+        ]
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [moduleName: project.getName()]
+            }
+        }
+        multiDexEnabled true
+        buildConfigField("boolean", "API_ENV", "$debug_mode")
+        buildConfigField("String", "UMENG_APP_KEY", "$umeng_app_key")
+        buildConfigField("String", "WECHAT_APP_ID", "$wechat_app_id")
+        buildConfigField("String", "WECHAT_APP_SECRET", "$wechat_app_secret")
+        buildConfigField("String", "QQ_APP_ID", "$qq_app_id")
+        buildConfigField("String", "QQ_APP_SECRET", "$qq_app_secret")
+        buildConfigField("String", "SINA_APP_ID", "$sina_app_id")
+        buildConfigField("String", "SINA_APP_SECRET", "$sina_app_secret")
+        buildConfigField("String", "SINA_APP_SHARE_URL", "$sina_app_share_url")
+        packagingOptions {
+            exclude 'META-INF/rxjava.properties'
+        }
+    }
+    signingConfigs {
+        sly {
+//            storeFile file('../lsq.jks')
+//            storePassword "123456"
+//            keyAlias "lsq"
+//            keyPassword "123456"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            zipAlignEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.sly
+            manifestPlaceholders = [JPUSH_APPKEY_VALUE: "f80337269bfdfae190826403",
+                                    PACKAGE_NAME      : "com.sly.baseframe",
+                                    CHANNEL_ID      : "f80337269bfdfae190826403",
+            ]
+        }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+    flavorDimensions "id", "channel"
+    //维度
+    productFlavors {
+        sly {
+            dimension "id"
+            applicationId ext.application_id
+            if (debug_mode) {//测试环境
+                buildConfigField("String", "DOMAIN", "$debug_domain")
+                //buildConfigField("String", "DOMAIN", "$debug_native")
+                buildConfigField("String", "H5_DOMAIN", "$debug_h5_domain")
+                buildConfigField("String", "H5_DOMAIN_NEW", "$debug_h5_domain")
+            } else {//生产环境
+                buildConfigField("String", "DOMAIN", "$release_domain")
+                buildConfigField("String", "H5_DOMAIN", "$release_h5_domain")
+                buildConfigField("String", "H5_DOMAIN_NEW", "$release_h5_new_domain")
+            }
+            manifestPlaceholders = [
+                    GETUI_APP_ID    : debug_mode ? "$debug_getui_app_id" : "$release_getui_app_id",
+                    GETUI_APP_SECRET: debug_mode ? "$debug_getui_app_secret" : "$release_getui_app_secret",
+                    GETUI_APP_KEY   : debug_mode ? "$debug_getui_app_key" : "$release_getui_app_key",
+                    UMENG_APP_KEY   : "$umeng_app_key",
+                    qqappid         : "$qq_app_id",
+                    JPUSH_APPKEY_VALUE: "6e25a2d5ef27042fc3b53b9e",
+                    PACKAGE_NAME    : applicationId
+            ]
+            signingConfig signingConfigs.sly
+        }
+
+        lsqsly_baidu { dimension "channel" }
+        lsqsly_360 { dimension "channel" }
+        lsqsly_yingyongbao { dimension "channel" }
+        lsqsly_yingyongbaocpd { dimension "channel" }
+        lsqsly_xiaomi { dimension "channel" }
+        lsqsly_huawei { dimension "channel" }
+        lsqsly_vivo { dimension "channel" }
+        lsqsly_oppo { dimension "channel" }
+        lsqsly_meizu { dimension "channel" }
+        lsqsly_chuizi { dimension "channel" }
+        lsqsly_sanxing { dimension "channel" }
+        lsqsly_jifeng { dimension "channel" }
+        lsqsly_mumayi { dimension "channel" }
+        lsqsly_anzhi { dimension "channel" }
+        lsqsly_guanfang { dimension "channel" }
+        lsqsly_yingyonghui { dimension "channel" }
+        lsqsly_sogo { dimension "channel" }
+        lsqsly_pc6 { dimension "channel" }
+        lsqsly_alibaba { dimension "channel" }
+
+        productFlavors.all { flavor ->
+            manifestPlaceholders.putAll([UMENG_CHANNEL_VALUE: name, CHANNEL_ID: name])
+        }
+    }
+    android.applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (!variant.buildType.isDebuggable()) {
+                //获取签名的名字 variant.signingConfig.name
+                //要被替换的源字符串
+                def sourceFile = "-${variant.flavorName}-${variant.buildType.name}"
+                //替换的字符串
+                def replaceFile = "${variant.flavorName}_${variant.buildType.name}}"
+                outputFileName = output.outputFile.name.replace(sourceFile, replaceFile);
+                //遗留问题：如何获取当前module的name，如CodeBooke这个名字怎么获取到
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:+'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation 'com.android.support:design:28.0.0-alpha1'
+    implementation 'com.android.support:support-v4:27.1.1'
+    implementation 'com.android.support:multidex:1.0.1'
+    // leakcanary
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5'
+    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
+    testImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
+    // butterknife
+    implementation 'com.jakewharton:butterknife:8.5.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
+    // Fresco所需依赖
+    implementation 'com.facebook.fresco:fresco:0.12.0'
+    //在 API < 14 上的机器支持 WebP 时，需要添加
+    implementation 'com.facebook.fresco:animated-base-support:0.12.0'
+    // 支持 GIF 动图，需要添加
+    implementation 'com.facebook.fresco:animated-gif:0.12.0'
+    // 支持 WebP （静态图+动图），需要添加
+    implementation 'com.facebook.fresco:animated-webp:0.12.0'
+    //    implementation 'com.facebook.fresco:webpsupport:0.12.0'
+    // 仅支持 WebP 静态图，需要添加
+    implementation 'com.facebook.fresco:webpsupport:0.12.0'
+    // retrofit2
+    implementation 'com.squareup.retrofit2:retrofit:2.2.0'
+    //    implementation ('com.squareup.retrofit2:retrofit:2.2.0') {
+    //        exclude group: 'com.squareup.okhttp3', module: 'okhttp'
+    //    }
+    implementation 'com.squareup.retrofit2:converter-gson:2.2.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.2.0'
+    implementation 'com.jakewharton.rxrelay2:rxrelay:2.0.0'
+    //Rxjava
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.0'
+    implementation 'com.google.code.gson:gson:2.8.0'
+    implementation 'com.alibaba:arouter-api:1.2.1'
+    annotationProcessor 'com.alibaba:arouter-compiler:1.1.2'
+    implementation 'org.greenrobot:eventbus:3.0.0'
+    implementation 'com.android.support:cardview-v7:25.3.1'
+    implementation 'com.umeng.analytics:analytics:latest.integration'
+    implementation 'com.jph.takephoto:takephoto_library:4.0.3'
+    implementation 'com.zyao89:zloading:1.0.11'
+
+    implementation files('libs/umeng-common-1.5.4.jar')
+    implementation files('libs/umeng-share-core-6.9.3.jar')
+    implementation files('libs/umeng-share-QQ-simplify-6.9.3.jar')
+    implementation files('libs/umeng-share-sina-simplify-6.9.3.jar')
+    implementation files('libs/umeng-share-wechat-simplify-6.9.3.jar')
+    implementation files('libs/umeng-shareboard-widget-6.9.3.jar')
+    implementation files('libs/umeng-sharetool-6.9.3.jar')
+    implementation files('libs/jcore-android-1.2.5.jar')
+    implementation files('libs/jpush-android-3.1.6.jar')
+}
