@@ -9,7 +9,7 @@
 
     <external-path
         name="camera_photos"
-        path="Android/data/com.lsq.klyjaz/" />
+        path="Android/data/com.sly.baseframe/" />
     <external-path
         name="external_storage_root"
         path="." />

@@ -102,7 +102,7 @@ public class AvatarDetailActivity extends BaseActivity implements TakePhoto.Take
         if (result != null) {
             TImage images = result.getImage();
             String filePath = images.getCompressPath();
-            if (getPhotoType == 1) {
+            if (getPhotoType == 0) {
                 filePath = PhotoBitmapUtils.amendRotatePhoto(filePath, this);
             }
             FrescoConfig.getInstance().loadFile(mIvIcon, filePath);
